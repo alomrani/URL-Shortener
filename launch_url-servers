@@ -1,0 +1,23 @@
+#!/bin/bash
+CWD="`pwd`";
+
+if [ ! -d "/virtual/alomrani/" ]; then
+	mkdir /virtual/alomrani/
+fi
+
+if [ ! -d "/virtual/alomrani/database" ]; then
+	mkdir /virtual/alomrani/database
+fi
+
+END=$2
+for ((i=1; i<=END; i++))
+do
+	sqlite3 /virtual/alomrani/database/partition$i.db "create table if not exists urls (shortURL TEXT PRIMARY KEY, longURL TEXT NOT NULL);"
+done
+
+javac URLShortner.java
+END=$3
+for ((i=0; i<END; i++))
+do
+	java -cp ../sqlite/sqlite-jdbc-3.27.2.1.jar:. URLShortner $(($1+$i)) $2 &
+done

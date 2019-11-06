@@ -1,0 +1,13 @@
+#!/bin/bash
+CWD="`pwd`";
+
+./database/createTables
+
+#java Visualizer &
+
+ssh -o StrictHostKeyChecking=no dh2026pc00 < /dev/null "cd \"$CWD\"; echo `pwd`; javac SimpleProxyServer.java ProxyHandler.java; java SimpleProxyServer $1 $2 $3" &
+
+for host in `cat hosts`
+do
+	ssh -o StrictHostKeyChecking=no $host < /dev/null "cd \"$CWD\"; ./watcher $1 $2 $3" &
+done

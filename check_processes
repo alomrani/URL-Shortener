@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ssh -o StrictHostKeyChecking=no dh2026pc00 < /dev/null "cd \"$CWD\"; ps aux| grep SimpleProxyServer" &
+
+for host in `cat hosts`
+do
+	ssh -o StrictHostKeyChecking=no $host < /dev/null "cd \"$CWD\"; ps aux| grep URLShortner" &
+done

@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [ ! -f "/virtual/$USER" ]; then
+	mkdir /virtual/$USER
+fi
+
+if [ ! -f "/virtual/$USER/database/" ]; then
+	mkdir /virtual/$USER/database
+fi
+
+END=$2
+for ((i=1; i<=END; i++))
+do
+	sqlite3 /virtual/$USER/database/partition$i.db "create table if not exists urls (shortURL TEXT PRIMARY KEY, longURL TEXT NOT NULL);"
+done
+
+END=$3
+for ((i=0; i<END; i++))
+	do
+
+	start_up[$i]=1
+done
+
+javac URLShortner.java
+
+while true; do
+
+	END=$3
+	for ((i=0; i<END; i++))
+		do
+		PORT=$(($1+$i))
+		url="http://localhost:$PORT/healthcheck"
+		echo $i
+		response="$(curl $url)"
+		echo $response
+
+		if [ "$response" = "Health Normal" ]
+		then 
+			start_up[$i]=0
+			echo "Success"
+
+		elif [ "$response" = "Server Connection error : Address already in use (Bind failed)" ]
+		then
+			echo "Port not open"
+
+		else
+
+
+			sqlite3 /virtual/$USER/database/SystemState.db  <<-EOF
+			.tables
+			UPDATE Datacount SET count=${start_up[$i]}+count-1 WHERE partition_type IN (SELECT partition FROM Databases WHERE port=$PORT);
+			
+			DELETE FROM Databases WHERE port=$PORT};
+			DELETE FROM Processes WHERE port=$PORT;
+			EOF
+
+			for host in `cat hosts`
+			do
+				ssh -o StrictHostKeyChecking=no $host < /dev/null "cd \"$CWD\"; ./watcher $1 $2 $3" &
+			done
+
+			java -cp ../sqlite/sqlite-jdbc-3.27.2.1.jar:. URLShortner $(($1+$i)) $2 &
+
+        fi
+		
+		done
+
+	END=$2
+	for ((i=1; i<=END; i++))
+	do
+		if [ ! -f "/virtual/$USER/database/partition$i.db" ]; then
+    		./dataRecovery $i
+		fi
+	done
+		
+	
+	sleep 2s
+done

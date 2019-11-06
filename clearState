@@ -1,0 +1,15 @@
+#!/bin/bash
+CWD="`pwd`";
+
+../../sqlite/sqlite-jdbc-3.27.2.1.jar:. SystemState.db  <<-EOF
+
+.tables
+DELETE FROM Processes;
+DELETE FROM Databases;
+DELETE FROM Datacount;
+
+INSERT INTO Datacount (1,0)
+INSERT INTO Datacount (2,0)
+INSERT INTO Datacount (3,0)
+
+EOF

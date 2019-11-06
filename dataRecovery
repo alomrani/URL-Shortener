@@ -1,0 +1,25 @@
+#!/bin/bash
+
+hostname=`hostname`
+hostindex=0
+HOSTS=()
+i=0
+for host in `cat hosts`
+do
+	if [[ "$host" =~ "$hostname" ]]; then
+		hostindex=$i
+	fi
+	HOSTS+=( $host )
+	i=$(($i+1))
+done
+
+if [ $1 -eq $((hostindex+1)) ]; then
+	nexthost=${HOSTS[$(($1%$i))]}
+else
+	nextindex=$((hostindex+i-1))
+	nextindex=$((nextindex%$i))
+	nexthost=${HOSTS[$nextindex]}
+fi
+
+echo "Recovering partition $1 from $nexthost"
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r $nexthost:/virtual/$USER/database/partition$1.db /virtual/$USER/database
